@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实时工资计算器</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#FFD700">
+    <meta name="mobile-web-app-capable" content="yes">
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('sw.js');
+        });
+    }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+        }
+        body {
+            min-height: 100vh;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            color: #fff;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .input-group {
+            margin: 2rem 0;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+        .input-group > * {
+            margin: 0;
+        }
+        .salary-input-wrapper {
+            display: flex;
+            align-items: center;
+            position: relative;
+            min-width: 200px;
+            max-width: 260px;
+            width: 220px;
+            box-sizing: border-box;
+        }
+        .salary-input-wrapper,
+        #workHours,
+        .salary-type {
+            min-width: 200px;
+            max-width: 260px;
+            width: 220px;
+            box-sizing: border-box;
+        }
+        .salary-type select,
+        .salary-input,
+        #workHours {
+            padding: 0.8rem;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 1rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .salary-type select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+        .salary-input {
+            padding-left: 2.2rem !important;
+            padding-right: 0.8rem !important;
+        }
+        .currency-suffix {
+            position: absolute;
+            left: 0.7rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem;
+            color: #fff;
+            cursor: pointer;
+            user-select: none;
+            opacity: 0.85;
+            transition: color 0.2s, opacity 0.2s;
+            z-index: 2;
+        }
+        .currency-suffix:hover {
+            color: #4CAF50;
+            opacity: 1;
+        }
+        .center-btn {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 7rem;
+        }
+        .center-btn button {
+            width: 220px;
+            font-size: 1rem;
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 8px;
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
+        .center-btn button:hover {
+            transform: translateY(-2px);
+            background: #45a049;
+        }
+        .center-btn button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .salary-display {
+            font-size: 2.8rem;
+            font-weight: bold;
+            margin: 1.5rem 0 0.5rem 0;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            transition: transform 0.3s;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 3.5rem;
+        }
+        .salary-display .worktime {
+            font-size: 1.2rem;
+            color: #ffd700;
+            margin-top: 0.5rem;
+            text-shadow: none;
+            font-weight: normal;
+        }
+        /* 新的全宽弹窗样式 */
+        .salary-full-dialog {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(34, 34, 34, 0.98);
+            color: #fff;
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .salary-full-dialog-content {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.18);
+            border-radius: 18px;
+            padding: 2.5rem 1rem 2rem 1rem;
+        }
+        .salary-full-dialog .dialog-earned-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #fffbe6;
+            margin-bottom: 1.2rem;
+            text-align: center;
+            text-shadow: 0 2px 12px #bfa800, 0 0 30px #fffbe6;
+        }
+        .salary-full-dialog .dialog-earned-amount {
+            font-size: 3.2rem;
+            font-weight: bold;
+            color: #fffbe6;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            text-shadow: 0 2px 18px #bfa800, 0 0 30px #fffbe6;
+        }
+        .salary-full-dialog .dialog-row {
+            font-size: 1.3rem;
+            margin: 0.7rem 0;
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 400px;
+        }
+        .salary-full-dialog .dialog-row .label {
+            color: #aaa;
+        }
+        .salary-full-dialog .dialog-row .value {
+            font-weight: bold;
+            color: #ffd700;
+        }
+        .salary-full-dialog .dialog-cancel {
+            margin-top: 2.2rem;
+            width: 220px;
+            font-size: 1rem;
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 8px;
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
+        .salary-full-dialog .dialog-cancel:hover {
+            transform: translateY(-2px);
+            background: #45a049;
+        }
+        .salary-full-dialog .dialog-pause {
+            margin-top: 2.2rem;
+            margin-right: 1rem;
+            width: 220px;
+            font-size: 1rem;
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 8px;
+            background: #FFA500;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            display: inline-block;
+        }
+        .salary-full-dialog .dialog-pause:hover {
+            transform: translateY(-2px);
+            background: #e69500;
+        }
+        .currency-select {
+            margin-bottom: 1rem;
+        }
+
+        .salary-type select,
+        .currency-select select {
+            padding: 0.8rem;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 1rem;
+            width: 200px;
+            cursor: pointer;
+            outline: none;
+            box-shadow: none;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            transition: border 0.2s, box-shadow 0.2s;
+        }
+        .salary-type select:focus,
+        .currency-select select:focus {
+            border: 2px solid #4CAF50;
+            box-shadow: 0 0 0 2px #4CAF5033;
+        }
+        .salary-type select option,
+        .currency-select select option {
+            background: #2a2a2a;
+            color: #fff;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin: 2rem 0;
+            font-size: 1.2rem;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: 8px;
+            transition: transform 0.3s;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .coin {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: gold;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: fall 2s linear forwards;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .glow {
+            animation: glow 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #4CAF50;
+            }
+            to {
+                text-shadow: 0 0 20px #fff, 0 0 30px #4CAF50, 0 0 40px #4CAF50;
+            }
+        }
+
+        .currency-amount {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .currency-amount span {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="glow">实时工资计算器</h1>
+        <div class="center-panel">
+            <div class="input-group">
+                <div class="salary-input-wrapper">
+                    <input type="number" id="salaryAmount" class="salary-input" placeholder="薪资" min="0" step="0.01">
+                    <span class="currency-suffix" id="currencySuffix">$</span>
+                </div>
+                <input type="number" id="workHours" placeholder="每天工作时长（小时）" min="0" step="0.5">
+                <div class="salary-type">
+                    <select id="salaryType">
+                        <option value="monthly">月薪</option>
+                        <option value="yearly">年薪</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="center-btn" id="centerBtnBox">
+            <button id="startBtn">开始计时</button>
+        </div>
+        <div class="salary-display dual-currency" id="salaryDisplay" style="display:none;">
+            <div class="currency-amount" id="salaryAmountDisplay">
+                <span>¥0.00</span>
+                <span>(≈$0.00)</span>
+            </div>
+            <div class="worktime" id="workTimeDisplay">00:00:00</div>
+        </div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="salary-full-dialog" id="salaryFullDialog">
+            <div class="salary-full-dialog-content">
+                <div class="dialog-earned-title">您已经赚到</div>
+                <div class="dialog-earned-amount" id="fullDialogSalary">$0.00 (¥0.00)</div>
+                <div class="dialog-row"><span class="label">已工作时长</span><span class="value" id="fullDialogTime">00:00:00</span></div>
+                <div class="dialog-row"><span class="label">每秒收入</span><span class="value" id="fullDialogPerSecond">$0.00 (¥0.00)</span></div>
+                <div class="dialog-row"><span class="label">每小时收入</span><span class="value" id="fullDialogPerHour">$0.00 (¥0.00)</span></div>
+                <div class="dialog-row"><span class="label">每日收入</span><span class="value" id="fullDialogPerDay">$0.00 (¥0.00)</span></div>
+                <div style="display:flex;justify-content:center;width:100%;">
+                    <button class="dialog-pause" id="fullDialogPause">暂停</button>
+                    <button class="dialog-cancel" id="fullDialogCancel">取消计时</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SalaryCalculator {
+            constructor() {
+                this.salaryAmount = 0;
+                this.workHours = 0;
+                this.startTime = null;
+                this.interval = null;
+                this.lastCoinTime = 0;
+                this.totalSalary = 0;
+                this.isRunning = false;
+                this.isPaused = false;
+                this.salaryType = 'monthly';
+                this.currency = 'CNY';
+                this.exchangeRate = 1;
+                this.lastExchangeRateUpdate = 0;
+
+                this.initializeElements();
+                this.attachEventListeners();
+                this.updateExchangeRate();
+                this.updateCurrencySuffix();
+            }
+
+            initializeElements() {
+                this.salaryTypeSelect = document.getElementById('salaryType');
+                this.salaryAmountInput = document.getElementById('salaryAmount');
+                this.workHoursInput = document.getElementById('workHours');
+                this.startBtn = document.getElementById('startBtn');
+                this.salaryDisplay = document.getElementById('salaryDisplay');
+                this.progressBar = document.getElementById('progressBar');
+                this.currencySuffix = document.getElementById('currencySuffix');
+                this.centerBtnBox = document.getElementById('centerBtnBox');
+                this.salaryAmountDisplay = document.getElementById('salaryAmountDisplay');
+                this.workTimeDisplay = document.getElementById('workTimeDisplay');
+                this.salaryFullDialog = document.getElementById('salaryFullDialog');
+                this.fullDialogSalary = document.getElementById('fullDialogSalary');
+                this.fullDialogTime = document.getElementById('fullDialogTime');
+                this.fullDialogPerSecond = document.getElementById('fullDialogPerSecond');
+                this.fullDialogPerHour = document.getElementById('fullDialogPerHour');
+                this.fullDialogPerDay = document.getElementById('fullDialogPerDay');
+                this.fullDialogCancel = document.getElementById('fullDialogCancel');
+                this.fullDialogPause = document.getElementById('fullDialogPause');
+            }
+
+            attachEventListeners() {
+                this.startBtn.addEventListener('click', () => this.toggleTimer());
+                this.salaryAmountInput.addEventListener('input', () => this.validateInputs());
+                this.workHoursInput.addEventListener('input', () => this.validateInputs());
+                this.salaryTypeSelect.addEventListener('change', () => {
+                    this.salaryType = this.salaryTypeSelect.value;
+                    this.updatePlaceholder();
+                });
+                this.currencySuffix.addEventListener('click', () => {
+                    this.currency = this.currency === 'CNY' ? 'USD' : 'CNY';
+                    this.updateCurrencySuffix();
+                    this.updatePlaceholder();
+                    this.updateExchangeRate();
+                });
+                this.fullDialogCancel.addEventListener('click', () => {
+                    this.salaryFullDialog.style.display = 'none';
+                    this.stopTimer();
+                });
+                this.fullDialogPause.addEventListener('click', () => {
+                    if (this.isPaused) {
+                        this.resumeTimer();
+                    } else {
+                        this.pauseTimer();
+                    }
+                });
+            }
+
+            async updateExchangeRate() {
+                const now = Date.now();
+                // 每小时更新一次汇率
+                if (now - this.lastExchangeRateUpdate > 3600000) {
+                    try {
+                        const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+                        const data = await response.json();
+                        this.exchangeRate = data.rates.CNY;
+                        this.lastExchangeRateUpdate = now;
+                    } catch (error) {
+                        console.error('获取汇率失败:', error);
+                        // 使用默认汇率
+                        this.exchangeRate = 7.2;
+                    }
+                }
+            }
+
+            updateCurrencySuffix() {
+                this.currencySuffix.textContent = this.currency === 'CNY' ? '¥' : '$';
+            }
+
+            updatePlaceholder() {
+                this.salaryAmountInput.placeholder = '薪资';
+            }
+
+            formatCurrency(amount, currency) {
+                const symbol = currency === 'CNY' ? '¥' : '$';
+                return `${symbol}${amount.toFixed(2)}`;
+            }
+
+            convertCurrency(amount, fromCurrency, toCurrency) {
+                if (fromCurrency === toCurrency) return amount;
+                if (fromCurrency === 'USD' && toCurrency === 'CNY') {
+                    return amount * this.exchangeRate;
+                }
+                return amount / this.exchangeRate;
+            }
+
+            validateInputs() {
+                const isValid = this.salaryAmountInput.value > 0 && this.workHoursInput.value > 0;
+                this.startBtn.disabled = !isValid;
+            }
+
+            toggleTimer() {
+                if (!this.isRunning) {
+                    this.startTimer();
+                } else {
+                    this.stopTimer();
+                }
+            }
+
+            startTimer() {
+                if (!this.salaryAmountInput.value || !this.workHoursInput.value) return;
+
+                this.salaryAmount = parseFloat(this.salaryAmountInput.value);
+                this.workHours = parseFloat(this.workHoursInput.value);
+                this.startTime = Date.now();
+                this.isRunning = true;
+                this.isPaused = false;
+                this.startBtn.textContent = '停止计时';
+                this.salaryAmountInput.disabled = true;
+                this.workHoursInput.disabled = true;
+                this.salaryTypeSelect.disabled = true;
+                this.currencySuffix.disabled = true;
+                this.centerBtnBox.style.display = 'none';
+                this.salaryDisplay.style.display = 'none';
+                this.salaryFullDialog.style.display = 'flex';
+
+                this.interval = setInterval(() => this.update(), 50);
+                this.fullDialogPause.textContent = '暂停';
+            }
+
+            stopTimer() {
+                clearInterval(this.interval);
+                this.isRunning = false;
+                this.isPaused = false;
+                this.startBtn.textContent = '开始计时';
+                this.salaryAmountInput.disabled = false;
+                this.workHoursInput.disabled = false;
+                this.salaryTypeSelect.disabled = false;
+                this.currencySuffix.disabled = false;
+                this.centerBtnBox.style.display = 'flex';
+                this.salaryDisplay.style.display = 'none';
+                this.salaryFullDialog.style.display = 'none';
+            }
+
+            calculateHourlyRate() {
+                const monthlyHours = 176; // 假设每月工作22天，每天8小时
+                const yearlyHours = monthlyHours * 12;
+                
+                let hourlyRate;
+                if (this.salaryType === 'monthly') {
+                    hourlyRate = this.salaryAmount / monthlyHours;
+                } else {
+                    hourlyRate = this.salaryAmount / yearlyHours;
+                }
+
+                return hourlyRate;
+            }
+
+            update() {
+                const elapsedMs = Date.now() - this.startTime;
+                const elapsedHours = elapsedMs / (1000 * 60 * 60);
+                const workHoursPerDay = this.workHours; // 每天工作时长
+                let perDay;
+                if (this.salaryType === 'monthly') {
+                    perDay = this.salaryAmount / 20;
+                } else {
+                    perDay = this.salaryAmount / 12 / 20;
+                }
+                // 计算两种货币的金额
+                const perDayCNY = this.currency === 'CNY' ? perDay : this.convertCurrency(perDay, 'USD', 'CNY');
+                const perDayUSD = this.currency === 'USD' ? perDay : this.convertCurrency(perDay, 'CNY', 'USD');
+                // 每小时收入 = 每天收入 / 每天工作时长
+                const perHourCNY = perDayCNY / workHoursPerDay;
+                const perHourUSD = perDayUSD / workHoursPerDay;
+                // 每秒收入 = 每小时收入 / 3600
+                const perSecondCNY = perHourCNY / 3600;
+                const perSecondUSD = perHourUSD / 3600;
+                // 实时工资
+                const salary = perHourCNY * (elapsedMs / (1000 * 60 * 60));
+                const salaryCNY = this.currency === 'CNY' ? salary : this.convertCurrency(salary, 'USD', 'CNY');
+                const salaryUSD = this.currency === 'USD' ? salary : this.convertCurrency(salary, 'CNY', 'USD');
+
+                // 更新弹窗显示
+                this.fullDialogSalary.textContent = `${this.formatCurrency(salaryUSD, 'USD')} (${this.formatCurrency(salaryCNY, 'CNY')})`;
+                this.fullDialogTime.textContent = this.formatTime(elapsedMs);
+                this.fullDialogPerSecond.textContent = `${this.formatCurrency(perSecondUSD, 'USD')} (${this.formatCurrency(perSecondCNY, 'CNY')})`;
+                this.fullDialogPerHour.textContent = `${this.formatCurrency(perHourUSD, 'USD')} (${this.formatCurrency(perHourCNY, 'CNY')})`;
+                this.fullDialogPerDay.textContent = `${this.formatCurrency(perDayUSD, 'USD')} (${this.formatCurrency(perDayCNY, 'CNY')})`;
+
+                // 更新进度条
+                const progress = (elapsedMs / (workHoursPerDay * 3600 * 1000)) * 100;
+                this.progressBar.style.width = `${Math.min(progress, 100)}%`;
+
+                // 检查是否需要撒金币
+                if (Math.floor(salaryCNY / 100) > Math.floor(this.lastCoinTime / 100)) {
+                    this.createCoins();
+                }
+                this.lastCoinTime = salaryCNY;
+
+                // 检查是否达到工作时长
+                if (elapsedMs >= workHoursPerDay * 3600 * 1000) {
+                    this.stopTimer();
+                }
+            }
+
+            formatTime(ms) {
+                const seconds = Math.floor(ms / 1000);
+                const hours = Math.floor(seconds / 3600);
+                const minutes = Math.floor((seconds % 3600) / 60);
+                const secs = seconds % 60;
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            createCoins() {
+                for (let i = 0; i < 10; i++) {
+                    const coin = document.createElement('div');
+                    coin.className = 'coin';
+                    coin.style.left = `${Math.random() * 100}vw`;
+                    document.body.appendChild(coin);
+
+                    // 动画结束后移除元素
+                    coin.addEventListener('animationend', () => {
+                        coin.remove();
+                    });
+                }
+            }
+
+            pauseTimer() {
+                clearInterval(this.interval);
+                this.isPaused = true;
+                this.fullDialogPause.textContent = '继续';
+            }
+
+            resumeTimer() {
+                if (!this.isPaused) return;
+                this.isPaused = false;
+                this.fullDialogPause.textContent = '暂停';
+                this.interval = setInterval(() => this.update(), 50);
+            }
+        }
+
+        // 初始化计算器
+        const calculator = new SalaryCalculator();
+    </script>
+</body>
+</html> 
