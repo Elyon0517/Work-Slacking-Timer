@@ -409,6 +409,7 @@
                 <input type="number" id="workHours" placeholder="每天工作时长（小时）" min="0" step="0.5">
                 <div class="salary-type">
                     <select id="salaryType">
+                        <option value="biweekly">两周薪</option>
                         <option value="monthly">月薪</option>
                         <option value="yearly">年薪</option>
                     </select>
@@ -455,7 +456,7 @@
                 this.totalSalary = 0;
                 this.isRunning = false;
                 this.isPaused = false;
-                this.salaryType = 'monthly';
+                this.salaryType = 'biweekly';
                 this.currency = 'CNY';
                 this.exchangeRate = 1;
                 this.lastExchangeRateUpdate = 0;
@@ -466,6 +467,7 @@
                         title: '实时工资计算器',
                         salary: '薪资',
                         workHours: '每天工作时长（小时）',
+                        biweekly: '两周薪',
                         monthly: '月薪',
                         yearly: '年薪',
                         start: '开始计时',
@@ -483,6 +485,7 @@
                         title: 'Real-time Salary Calculator',
                         salary: 'Salary',
                         workHours: 'Work Hours per Day',
+                        biweekly: 'Bi-weekly',
                         monthly: 'Monthly',
                         yearly: 'Yearly',
                         start: 'Start Timer',
@@ -664,10 +667,12 @@
                 const elapsedHours = elapsedMs / (1000 * 60 * 60);
                 const workHoursPerDay = this.workHours; // 每天工作时长
                 let perDay;
-                if (this.salaryType === 'monthly') {
-                    perDay = this.salaryAmount / 20;
+                if (this.salaryType === 'biweekly') {
+                    perDay = this.salaryAmount / 10; // 每两周10个工作日
+                } else if (this.salaryType === 'monthly') {
+                    perDay = this.salaryAmount / 21; // 每月21个工作日
                 } else {
-                    perDay = this.salaryAmount / 12 / 20;
+                    perDay = this.salaryAmount / (52 * 5); // 每年52周，每周5个工作日
                 }
                 // 计算两种货币的金额
                 const perDayCNY = this.currency === 'CNY' ? perDay : this.convertCurrency(perDay, 'USD', 'CNY');
@@ -762,8 +767,9 @@
                 document.querySelector('h1').textContent = this.translations[lang].title;
                 this.salaryAmountInput.placeholder = this.translations[lang].salary;
                 this.workHoursInput.placeholder = this.translations[lang].workHours;
-                this.salaryTypeSelect.options[0].text = this.translations[lang].monthly;
-                this.salaryTypeSelect.options[1].text = this.translations[lang].yearly;
+                this.salaryTypeSelect.options[0].text = this.translations[lang].biweekly;
+                this.salaryTypeSelect.options[1].text = this.translations[lang].monthly;
+                this.salaryTypeSelect.options[2].text = this.translations[lang].yearly;
                 this.startBtn.textContent = this.isRunning ? this.translations[lang].stop : this.translations[lang].start;
                 this.fullDialogPause.textContent = this.isPaused ? this.translations[lang].resume : this.translations[lang].pause;
                 this.fullDialogCancel.textContent = this.translations[lang].cancel;
