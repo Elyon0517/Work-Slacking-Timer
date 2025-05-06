@@ -49,6 +49,35 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
+            position: relative;
+        }
+
+        .language-switcher {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            z-index: 1000;
+        }
+
+        .language-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .language-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .language-btn.active {
+            background: #4CAF50;
         }
 
         .input-group {
@@ -366,6 +395,10 @@
 </head>
 <body>
     <div class="container">
+        <div class="language-switcher">
+            <button class="language-btn active" data-lang="zh">中文</button>
+            <button class="language-btn" data-lang="en">English</button>
+        </div>
         <h1 class="glow">实时工资计算器</h1>
         <div class="center-panel">
             <div class="input-group">
@@ -426,6 +459,44 @@
                 this.currency = 'CNY';
                 this.exchangeRate = 1;
                 this.lastExchangeRateUpdate = 0;
+                this.currentLang = 'zh';
+
+                this.translations = {
+                    zh: {
+                        title: '实时工资计算器',
+                        salary: '薪资',
+                        workHours: '每天工作时长（小时）',
+                        monthly: '月薪',
+                        yearly: '年薪',
+                        start: '开始计时',
+                        stop: '停止计时',
+                        pause: '暂停',
+                        resume: '继续',
+                        cancel: '取消计时',
+                        earned: '您已经赚到',
+                        workTime: '已工作时长',
+                        perSecond: '每秒收入',
+                        perHour: '每小时收入',
+                        perDay: '每日收入'
+                    },
+                    en: {
+                        title: 'Real-time Salary Calculator',
+                        salary: 'Salary',
+                        workHours: 'Work Hours per Day',
+                        monthly: 'Monthly',
+                        yearly: 'Yearly',
+                        start: 'Start Timer',
+                        stop: 'Stop Timer',
+                        pause: 'Pause',
+                        resume: 'Resume',
+                        cancel: 'Cancel',
+                        earned: 'You Have Earned',
+                        workTime: 'Work Time',
+                        perSecond: 'Per Second',
+                        perHour: 'Per Hour',
+                        perDay: 'Per Day'
+                    }
+                };
 
                 this.initializeElements();
                 this.attachEventListeners();
@@ -452,6 +523,7 @@
                 this.fullDialogPerDay = document.getElementById('fullDialogPerDay');
                 this.fullDialogCancel = document.getElementById('fullDialogCancel');
                 this.fullDialogPause = document.getElementById('fullDialogPause');
+                this.languageBtns = document.querySelectorAll('.language-btn');
             }
 
             attachEventListeners() {
@@ -479,6 +551,12 @@
                         this.pauseTimer();
                     }
                 });
+                this.languageBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const lang = btn.dataset.lang;
+                        this.setLanguage(lang);
+                    });
+                });
             }
 
             async updateExchangeRate() {
@@ -503,7 +581,7 @@
             }
 
             updatePlaceholder() {
-                this.salaryAmountInput.placeholder = '薪资';
+                this.salaryAmountInput.placeholder = this.translations[this.currentLang].salary;
             }
 
             formatCurrency(amount, currency) {
@@ -606,11 +684,22 @@
                 const salaryUSD = this.currency === 'USD' ? salary : this.convertCurrency(salary, 'CNY', 'USD');
 
                 // 更新弹窗显示
-                this.fullDialogSalary.textContent = `${this.formatCurrency(salaryUSD, 'USD')} (${this.formatCurrency(salaryCNY, 'CNY')})`;
+                const primaryCurrency = this.currency === 'CNY' ? 'CNY' : 'USD';
+                const secondaryCurrency = this.currency === 'CNY' ? 'USD' : 'CNY';
+                const primaryAmount = this.currency === 'CNY' ? salaryCNY : salaryUSD;
+                const secondaryAmount = this.currency === 'CNY' ? salaryUSD : salaryCNY;
+                const primaryPerSecond = this.currency === 'CNY' ? perSecondCNY : perSecondUSD;
+                const secondaryPerSecond = this.currency === 'CNY' ? perSecondUSD : perSecondCNY;
+                const primaryPerHour = this.currency === 'CNY' ? perHourCNY : perHourUSD;
+                const secondaryPerHour = this.currency === 'CNY' ? perHourUSD : perHourCNY;
+                const primaryPerDay = this.currency === 'CNY' ? perDayCNY : perDayUSD;
+                const secondaryPerDay = this.currency === 'CNY' ? perDayUSD : perDayCNY;
+
+                this.fullDialogSalary.textContent = `${this.formatCurrency(primaryAmount, primaryCurrency)} (${this.formatCurrency(secondaryAmount, secondaryCurrency)})`;
                 this.fullDialogTime.textContent = this.formatTime(elapsedMs);
-                this.fullDialogPerSecond.textContent = `${this.formatCurrency(perSecondUSD, 'USD')} (${this.formatCurrency(perSecondCNY, 'CNY')})`;
-                this.fullDialogPerHour.textContent = `${this.formatCurrency(perHourUSD, 'USD')} (${this.formatCurrency(perHourCNY, 'CNY')})`;
-                this.fullDialogPerDay.textContent = `${this.formatCurrency(perDayUSD, 'USD')} (${this.formatCurrency(perDayCNY, 'CNY')})`;
+                this.fullDialogPerSecond.textContent = `${this.formatCurrency(primaryPerSecond, primaryCurrency)} (${this.formatCurrency(secondaryPerSecond, secondaryCurrency)})`;
+                this.fullDialogPerHour.textContent = `${this.formatCurrency(primaryPerHour, primaryCurrency)} (${this.formatCurrency(secondaryPerHour, secondaryCurrency)})`;
+                this.fullDialogPerDay.textContent = `${this.formatCurrency(primaryPerDay, primaryCurrency)} (${this.formatCurrency(secondaryPerDay, secondaryCurrency)})`;
 
                 // 更新进度条
                 const progress = (elapsedMs / (workHoursPerDay * 3600 * 1000)) * 100;
@@ -661,6 +750,28 @@
                 this.isPaused = false;
                 this.fullDialogPause.textContent = '暂停';
                 this.interval = setInterval(() => this.update(), 50);
+            }
+
+            setLanguage(lang) {
+                this.currentLang = lang;
+                this.languageBtns.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.lang === lang);
+                });
+
+                // Update all text content
+                document.querySelector('h1').textContent = this.translations[lang].title;
+                this.salaryAmountInput.placeholder = this.translations[lang].salary;
+                this.workHoursInput.placeholder = this.translations[lang].workHours;
+                this.salaryTypeSelect.options[0].text = this.translations[lang].monthly;
+                this.salaryTypeSelect.options[1].text = this.translations[lang].yearly;
+                this.startBtn.textContent = this.isRunning ? this.translations[lang].stop : this.translations[lang].start;
+                this.fullDialogPause.textContent = this.isPaused ? this.translations[lang].resume : this.translations[lang].pause;
+                this.fullDialogCancel.textContent = this.translations[lang].cancel;
+                document.querySelector('.dialog-earned-title').textContent = this.translations[lang].earned;
+                document.querySelector('.dialog-row:nth-child(3) .label').textContent = this.translations[lang].workTime;
+                document.querySelector('.dialog-row:nth-child(4) .label').textContent = this.translations[lang].perSecond;
+                document.querySelector('.dialog-row:nth-child(5) .label').textContent = this.translations[lang].perHour;
+                document.querySelector('.dialog-row:nth-child(6) .label').textContent = this.translations[lang].perDay;
             }
         }
 
