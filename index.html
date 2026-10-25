@@ -193,7 +193,7 @@
             text-shadow: none;
             font-weight: normal;
         }
-        /* 新的全宽弹窗样式 */
+        /* 全宽弹窗 */
         .salary-full-dialog {
             position: fixed;
             left: 0;
@@ -674,7 +674,6 @@
                 } else {
                     perDay = this.salaryAmount / (52 * 5); // 每年52周，每周5个工作日
                 }
-                // 计算两种货币的金额
                 const perDayCNY = this.currency === 'CNY' ? perDay : this.convertCurrency(perDay, 'USD', 'CNY');
                 const perDayUSD = this.currency === 'USD' ? perDay : this.convertCurrency(perDay, 'CNY', 'USD');
                 // 每小时收入 = 每天收入 / 每天工作时长
@@ -683,12 +682,9 @@
                 // 每秒收入 = 每小时收入 / 3600
                 const perSecondCNY = perHourCNY / 3600;
                 const perSecondUSD = perHourUSD / 3600;
-                // 实时工资
                 const salary = perHourCNY * (elapsedMs / (1000 * 60 * 60));
                 const salaryCNY = this.currency === 'CNY' ? salary : this.convertCurrency(salary, 'USD', 'CNY');
                 const salaryUSD = this.currency === 'USD' ? salary : this.convertCurrency(salary, 'CNY', 'USD');
-
-                // 更新弹窗显示
                 const primaryCurrency = this.currency === 'CNY' ? 'CNY' : 'USD';
                 const secondaryCurrency = this.currency === 'CNY' ? 'USD' : 'CNY';
                 const primaryAmount = this.currency === 'CNY' ? salaryCNY : salaryUSD;
@@ -705,18 +701,12 @@
                 this.fullDialogPerSecond.textContent = `${this.formatCurrency(primaryPerSecond, primaryCurrency)} (${this.formatCurrency(secondaryPerSecond, secondaryCurrency)})`;
                 this.fullDialogPerHour.textContent = `${this.formatCurrency(primaryPerHour, primaryCurrency)} (${this.formatCurrency(secondaryPerHour, secondaryCurrency)})`;
                 this.fullDialogPerDay.textContent = `${this.formatCurrency(primaryPerDay, primaryCurrency)} (${this.formatCurrency(secondaryPerDay, secondaryCurrency)})`;
-
-                // 更新进度条
                 const progress = (elapsedMs / (workHoursPerDay * 3600 * 1000)) * 100;
                 this.progressBar.style.width = `${Math.min(progress, 100)}%`;
-
-                // 检查是否需要撒金币
                 if (Math.floor(salaryCNY / 100) > Math.floor(this.lastCoinTime / 100)) {
                     this.createCoins();
                 }
                 this.lastCoinTime = salaryCNY;
-
-                // 检查是否达到工作时长
                 if (elapsedMs >= workHoursPerDay * 3600 * 1000) {
                     this.stopTimer();
                 }
@@ -736,8 +726,6 @@
                     coin.className = 'coin';
                     coin.style.left = `${Math.random() * 100}vw`;
                     document.body.appendChild(coin);
-
-                    // 动画结束后移除元素
                     coin.addEventListener('animationend', () => {
                         coin.remove();
                     });
@@ -762,8 +750,6 @@
                 this.languageBtns.forEach(btn => {
                     btn.classList.toggle('active', btn.dataset.lang === lang);
                 });
-
-                // Update all text content
                 document.querySelector('h1').textContent = this.translations[lang].title;
                 this.salaryAmountInput.placeholder = this.translations[lang].salary;
                 this.workHoursInput.placeholder = this.translations[lang].workHours;
@@ -780,8 +766,6 @@
                 document.querySelector('.dialog-row:nth-child(6) .label').textContent = this.translations[lang].perDay;
             }
         }
-
-        // 初始化计算器
         const calculator = new SalaryCalculator();
     </script>
 </body>
