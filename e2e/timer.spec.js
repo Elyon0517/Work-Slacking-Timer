@@ -32,14 +32,14 @@ test('Chinese walkthrough, correct monthly earnings and desktop captures', async
   await page.locator('#workHours').fill('8');
   await page.locator('#salaryType').selectOption('monthly');
   mkdirSync('docs/screenshots', { recursive: true });
-  await page.screenshot({ path: 'docs/screenshots/setup-desktop.png' });
+  await page.screenshot({ animations: 'disabled', path: 'docs/screenshots/setup-desktop.png' });
   await page.getByRole('button', { name: '开始计时', exact: true }).click();
   await page.clock.fastForward(5760000);
   await expect(page.locator('#fullDialogSalary')).toHaveText('¥200.00 ($27.78)');
   await expect(page.locator('#fullDialogTime')).toHaveText('01:36:00');
   await expect(page.locator('#fullDialogPerHour')).toHaveText('¥125.00 ($17.36)');
   await expect(page.locator('#currencySuffix')).toBeDisabled();
-  await page.screenshot({ path: 'docs/screenshots/earnings-desktop.png' });
+  await page.screenshot({ animations: 'disabled', path: 'docs/screenshots/earnings-desktop.png' });
   expect(errors).toEqual([]);
 });
 
@@ -70,7 +70,7 @@ test('USD is converted once and pause/resume excludes paused time', async ({ pag
   await page.clock.fastForward(hour);
   await expect(page.locator('#fullDialogTime')).toHaveText('03:00:00');
   await expect(page.locator('#fullDialogSalary')).toHaveText('$75.00 (¥540.00)');
-  await page.screenshot({ path: 'docs/screenshots/earnings-english.png' });
+  await page.screenshot({ animations: 'disabled', path: 'docs/screenshots/earnings-english.png' });
   await page.getByRole('button', { name: 'Cancel', exact: true }).click();
   await expect(page.getByRole('dialog')).toBeHidden();
   await expect(page.getByRole('button', { name: 'Start Timer', exact: true })).toBeVisible();
@@ -129,6 +129,6 @@ test('mobile walkthrough fits a 390px viewport', async ({ page }) => {
   const box = await buttons.boundingBox();
   expect(box.x).toBeGreaterThanOrEqual(0);
   expect(box.x + box.width).toBeLessThanOrEqual(390);
-  await page.screenshot({ path: 'docs/screenshots/earnings-mobile.png' });
+  await page.screenshot({ animations: 'disabled', path: 'docs/screenshots/earnings-mobile.png' });
   expect(errors).toEqual([]);
 });

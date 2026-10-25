@@ -387,6 +387,10 @@
         input[type=number] {
             -moz-appearance: textfield;
         }
+        .center-panel { width: min(100%, 760px); padding: 0 20px; }
+        .hours-wrapper, .salary-type { position: relative; }
+        .hours-wrapper { width: 220px; min-width: 200px; max-width: 260px; }
+        .input-caption { position: absolute; left: 0; top: -24px; color: #aaa; font-size: 0.8rem; }
         .intro, .page-note { color: #aaa; font-size: 0.9rem; line-height: 1.7; text-align: center; }
         .intro { margin: 16px 20px 0; }
         .page-note { margin: 12px 20px; max-width: 620px; }
@@ -400,7 +404,7 @@
         .currency-suffix:disabled { cursor: default; opacity: 0.45; }
         @media (max-width: 600px) {
             .container { padding: 90px 18px 24px; }
-            .input-group { flex-direction: column; align-items: center; margin: 24px 0 0; }
+            .input-group { flex-direction: column; align-items: center; gap: 36px; margin: 40px 0 0; }
             h1 { font-size: 1.7rem; }
             .salary-full-dialog { padding: 16px; }
             .salary-full-dialog-content { padding: 24px 14px; }
@@ -428,11 +432,16 @@
         <div class="center-panel">
             <div class="input-group">
                 <div class="salary-input-wrapper">
+                    <label class="input-caption" id="salaryLabel" for="salaryAmount">薪资</label>
                     <input type="number" id="salaryAmount" aria-label="薪资" class="salary-input" placeholder="薪资" min="0" step="0.01">
                     <button type="button" class="currency-suffix" id="currencySuffix" aria-label="切换薪资币种">¥</button>
                 </div>
-                <input type="number" id="workHours" max="24" aria-label="每天工作时长（小时）" placeholder="每天工作时长（小时）" min="0" step="0.5">
+                <div class="hours-wrapper">
+                    <label class="input-caption" id="hoursLabel" for="workHours">每天工作时长（小时）</label>
+                    <input type="number" id="workHours" max="24" aria-label="每天工作时长（小时）" placeholder="每天工作时长（小时）" min="0" step="0.5">
+                </div>
                 <div class="salary-type">
+                    <label class="input-caption" id="periodLabel" for="salaryType">薪资周期</label>
                     <select id="salaryType" aria-label="薪资周期">
                         <option value="biweekly">两周薪</option>
                         <option value="monthly">月薪</option>
@@ -823,6 +832,9 @@
                 document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
                 document.querySelector('h1').textContent = this.translations[lang].title;
                 document.getElementById('intro').textContent = this.translations[lang].intro;
+                document.getElementById('salaryLabel').textContent = this.translations[lang].salary;
+                document.getElementById('hoursLabel').textContent = this.translations[lang].workHours;
+                document.getElementById('periodLabel').textContent = this.translations[lang].period;
                 document.getElementById('pageNote').firstChild.textContent = this.translations[lang].privacy;
                 this.salaryAmountInput.setAttribute('aria-label', this.translations[lang].salary);
                 this.workHoursInput.setAttribute('aria-label', this.translations[lang].workHours);

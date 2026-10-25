@@ -22,7 +22,7 @@ available. CI runs the same suite on pull requests and pushes to main.
 - English and Chinese controls remain correct when starting and restarting.
 - Empty, negative and out-of-range work hours disable the start button.
 - Reaching the daily time limit stops the run; restarting clears elapsed time.
-- Malformed exchange-rate data retains a valid, labeled fallback.
+- Malformed exchange-rate data and network failures retain a valid, labeled fallback.
 - Reloading resets inputs rather than saving salary.
 - The timer and buttons fit a 390 × 844 viewport.
 - No uncaught page exceptions occur during the tested interactions.
@@ -37,7 +37,7 @@ available. CI runs the same suite on pull requests and pushes to main.
 | `earnings-english.png` | USD 2,000/fortnight, 8 hours/day; 3 active hours plus 1 excluded paused hour |
 
 All are screenshots of the real page following actual input and button interactions.
-Playwright advances the browser clock to avoid waiting hours. Only the external exchange-rate
+Playwright advances the browser clock to avoid waiting hours and disables visual animations during capture for stable images. Only the external exchange-rate
 response is replaced with a reproducible 7.2 CNY/USD fixture; the DOM and calculated results
 are not fabricated. Salaries are synthetic examples.
 
