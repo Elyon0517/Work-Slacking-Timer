@@ -34,6 +34,8 @@ available. CI runs the same suite on pull requests and pushes to main.
 | `setup-desktop.png` | CNY 21,000/month, 8 hours/day, before starting |
 | `earnings-desktop.png` | Same inputs, 1:36:00 active time, CNY 200 estimated earnings |
 | `earnings-mobile.png` | Same state at 390 × 844 |
+| `setup-english.png` | English inputs: USD 2,000/fortnight, 8 hours/day |
+| `earnings-mobile-english.png` | English USD 75 estimate at 390 × 844 |
 | `earnings-english.png` | USD 2,000/fortnight, 8 hours/day; 3 active hours plus 1 excluded paused hour |
 
 All are screenshots of the real page following actual input and button interactions.

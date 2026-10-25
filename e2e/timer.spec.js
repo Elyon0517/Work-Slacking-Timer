@@ -58,6 +58,10 @@ test('USD is converted once and pause/resume excludes paused time', async ({ pag
   const errors = await open(page);
   await page.getByRole('button', { name: 'English', exact: true }).click();
   await page.getByRole('button', { name: 'Switch salary currency' }).click();
+  await page.locator('#salaryAmount').fill('2000');
+  await page.locator('#workHours').fill('8');
+  await page.locator('#salaryType').selectOption('biweekly');
+  await page.screenshot({ animations: 'disabled', path: 'docs/screenshots/setup-english.png' });
   await start(page, '2000', 'biweekly');
   await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
   await page.clock.fastForward(2 * hour);
@@ -71,6 +75,9 @@ test('USD is converted once and pause/resume excludes paused time', async ({ pag
   await expect(page.locator('#fullDialogTime')).toHaveText('03:00:00');
   await expect(page.locator('#fullDialogSalary')).toHaveText('$75.00 (¥540.00)');
   await page.screenshot({ animations: 'disabled', path: 'docs/screenshots/earnings-english.png' });
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ animations: 'disabled', path: 'docs/screenshots/earnings-mobile-english.png' });
   await page.getByRole('button', { name: 'Cancel', exact: true }).click();
   await expect(page.getByRole('dialog')).toBeHidden();
   await expect(page.getByRole('button', { name: 'Start Timer', exact: true })).toBeVisible();
