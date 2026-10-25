@@ -4,19 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Work Slacking Timer</title>
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#FFD700">
-    <meta name="mobile-web-app-capable" content="yes">
-    <script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-            navigator.serviceWorker.register('sw.js');
-        });
-    }
-    </script>
+    <meta name="description" content="把工作时间换算成看得见的收入。免费、无需登录的薪资计时器，支持人民币、美元和中英文。">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='29' fill='%23ffd700'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-size='38' font-family='sans-serif'%3E%C2%A5%3C/text%3E%3C/svg%3E">
     <style>
         * {
             margin: 0;
@@ -29,7 +19,8 @@
         }
         body {
             min-height: 100vh;
-            height: 100vh;
+            min-height: 100dvh;
+            height: auto;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -48,7 +39,8 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100dvh;
+            height: auto;
             position: relative;
         }
 
@@ -141,6 +133,8 @@
             opacity: 0.85;
             transition: color 0.2s, opacity 0.2s;
             z-index: 2;
+            border: 0;
+            background: transparent;
         }
         .currency-suffix:hover {
             color: #4CAF50;
@@ -199,7 +193,9 @@
             left: 0;
             top: 0;
             width: 100vw;
-            height: 100vh;
+            height: 100dvh;
+            padding: 20px;
+            overflow-y: auto;
             background: rgba(34, 34, 34, 0.98);
             color: #fff;
             z-index: 9999;
@@ -391,6 +387,34 @@
         input[type=number] {
             -moz-appearance: textfield;
         }
+        .intro, .page-note { color: #aaa; font-size: 0.9rem; line-height: 1.7; text-align: center; }
+        .intro { margin: 16px 20px 0; }
+        .page-note { margin: 12px 20px; max-width: 620px; }
+        .page-note a, .dialog-source { color: #ffd700; }
+        .dialog-brand { color: #b8b5a4; letter-spacing: 0.16em; font-size: 0.75rem; margin-bottom: 24px; }
+        .rate-note { color: #b8b5a4; font-size: 0.8rem; line-height: 1.7; text-align: center; margin: 20px 0 0; }
+        .dialog-source { margin-top: 22px; font-size: 0.8rem; text-decoration: none; }
+        .dialog-actions { display: flex; justify-content: center; width: 100%; gap: 16px; }
+        .dialog-actions button { margin-right: 0 !important; }
+        button:focus-visible, a:focus-visible { outline: 2px solid #ffd700; outline-offset: 4px; }
+        .currency-suffix:disabled { cursor: default; opacity: 0.45; }
+        @media (max-width: 600px) {
+            .container { padding: 90px 18px 24px; }
+            .input-group { flex-direction: column; align-items: center; margin: 24px 0 0; }
+            h1 { font-size: 1.7rem; }
+            .salary-full-dialog { padding: 16px; }
+            .salary-full-dialog-content { padding: 24px 14px; }
+            .salary-full-dialog .dialog-earned-title { font-size: 1.7rem; }
+            .salary-full-dialog .dialog-earned-amount { font-size: clamp(1.4rem, 7vw, 2.2rem); }
+            .salary-full-dialog .dialog-row { font-size: 0.95rem; gap: 12px; }
+            .dialog-row .value { text-align: right; }
+            .dialog-actions button { width: auto !important; flex: 1; padding: 12px !important; margin-top: 24px !important; }
+            .dialog-brand { font-size: 0.65rem; letter-spacing: 0.1em; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .glow { animation: none; }
+            .coin { display: none; }
+        }
     </style>
 </head>
 <body>
@@ -400,15 +424,16 @@
             <button class="language-btn" data-lang="en">English</button>
         </div>
         <h1 class="glow">摸鱼计时器</h1>
+        <p class="intro" id="intro">把工作时间，换算成看得见的收入。</p>
         <div class="center-panel">
             <div class="input-group">
                 <div class="salary-input-wrapper">
-                    <input type="number" id="salaryAmount" class="salary-input" placeholder="薪资" min="0" step="0.01">
-                    <span class="currency-suffix" id="currencySuffix">$</span>
+                    <input type="number" id="salaryAmount" aria-label="薪资" class="salary-input" placeholder="薪资" min="0" step="0.01">
+                    <button type="button" class="currency-suffix" id="currencySuffix" aria-label="切换薪资币种">¥</button>
                 </div>
-                <input type="number" id="workHours" placeholder="每天工作时长（小时）" min="0" step="0.5">
+                <input type="number" id="workHours" max="24" aria-label="每天工作时长（小时）" placeholder="每天工作时长（小时）" min="0" step="0.5">
                 <div class="salary-type">
-                    <select id="salaryType">
+                    <select id="salaryType" aria-label="薪资周期">
                         <option value="biweekly">两周薪</option>
                         <option value="monthly">月薪</option>
                         <option value="yearly">年薪</option>
@@ -417,7 +442,7 @@
             </div>
         </div>
         <div class="center-btn" id="centerBtnBox">
-            <button id="startBtn">开始计时</button>
+            <button id="startBtn" disabled>开始计时</button>
         </div>
         <div class="salary-display dual-currency" id="salaryDisplay" style="display:none;">
             <div class="currency-amount" id="salaryAmountDisplay">
@@ -429,18 +454,22 @@
         <div class="progress-container">
             <div class="progress-bar" id="progressBar"></div>
         </div>
-        <div class="salary-full-dialog" id="salaryFullDialog">
+        <p class="page-note" id="pageNote">无需登录，不保存薪资。金额按固定工作日假设估算，仅作趣味参考。<br><a href="https://github.com/Elyon0517/Work-Slacking-Timer">Elyon0517 / GitHub ↗</a></p>
+        <div class="salary-full-dialog" id="salaryFullDialog" role="dialog" aria-modal="true" aria-labelledby="earnedTitle" tabindex="-1">
             <div class="salary-full-dialog-content">
-                <div class="dialog-earned-title">您已经赚到</div>
+                <div class="dialog-brand">WORK SLACKING TIMER · ELYON0517</div>
+                <div class="dialog-earned-title" id="earnedTitle">您已经赚到</div>
                 <div class="dialog-earned-amount" id="fullDialogSalary">$0.00 (¥0.00)</div>
                 <div class="dialog-row"><span class="label">已工作时长</span><span class="value" id="fullDialogTime">00:00:00</span></div>
                 <div class="dialog-row"><span class="label">每秒收入</span><span class="value" id="fullDialogPerSecond">$0.00 (¥0.00)</span></div>
                 <div class="dialog-row"><span class="label">每小时收入</span><span class="value" id="fullDialogPerHour">$0.00 (¥0.00)</span></div>
                 <div class="dialog-row"><span class="label">每日收入</span><span class="value" id="fullDialogPerDay">$0.00 (¥0.00)</span></div>
-                <div style="display:flex;justify-content:center;width:100%;">
+                <div class="dialog-actions">
                     <button class="dialog-pause" id="fullDialogPause">暂停</button>
                     <button class="dialog-cancel" id="fullDialogCancel">取消计时</button>
                 </div>
+                <p class="rate-note" id="rateNote"></p>
+                <a class="dialog-source" href="https://github.com/Elyon0517/Work-Slacking-Timer">GitHub · Work-Slacking-Timer ↗</a>
             </div>
         </div>
     </div>
@@ -458,7 +487,9 @@
                 this.isPaused = false;
                 this.salaryType = 'biweekly';
                 this.currency = 'CNY';
-                this.exchangeRate = 1;
+                this.exchangeRate = 7.2;
+                this.rateSource = 'fallback';
+                this.pausedAt = null;
                 this.lastExchangeRateUpdate = 0;
                 this.currentLang = 'zh';
 
@@ -479,7 +510,14 @@
                         workTime: '已工作时长',
                         perSecond: '每秒收入',
                         perHour: '每小时收入',
-                        perDay: '每日收入'
+                        perDay: '每日收入',
+                        intro: '把工作时间，换算成看得见的收入。',
+                        privacy: '无需登录，不保存薪资。金额按固定工作日假设估算，仅作趣味参考。',
+                        period: '薪资周期',
+                        currency: '切换薪资币种',
+                        referenceRate: '接口参考汇率',
+                        fallbackRate: '备用参考汇率',
+                        estimate: '估算金额，不代表实际工资到账'
                     },
                     en: {
                         title: 'Real-time Salary Calculator',
@@ -497,7 +535,14 @@
                         workTime: 'Work Time',
                         perSecond: 'Per Second',
                         perHour: 'Per Hour',
-                        perDay: 'Per Day'
+                        perDay: 'Per Day',
+                        intro: 'Turn work time into visible earnings.',
+                        privacy: 'No account or saved salary. Estimates use fixed workday assumptions and are for fun.',
+                        period: 'Pay period',
+                        currency: 'Switch salary currency',
+                        referenceRate: 'API reference rate',
+                        fallbackRate: 'Fallback reference rate',
+                        estimate: 'Estimate only; not a payroll record'
                     }
                 };
 
@@ -505,6 +550,8 @@
                 this.attachEventListeners();
                 this.updateExchangeRate();
                 this.updateCurrencySuffix();
+                this.validateInputs();
+                this.updateRateNote();
             }
 
             initializeElements() {
@@ -564,19 +611,29 @@
 
             async updateExchangeRate() {
                 const now = Date.now();
-                // 每小时更新一次汇率
-                if (now - this.lastExchangeRateUpdate > 3600000) {
-                    try {
-                        const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-                        const data = await response.json();
-                        this.exchangeRate = data.rates.CNY;
-                        this.lastExchangeRateUpdate = now;
-                    } catch (error) {
-                        console.error('获取汇率失败:', error);
-                        // 使用默认汇率
-                        this.exchangeRate = 7.2;
-                    }
+                if (now - this.lastExchangeRateUpdate <= 3600000) return;
+                try {
+                    const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD', {
+                        signal: AbortSignal.timeout(5000),
+                    });
+                    if (!response.ok) throw new Error('Rate request failed');
+                    const data = await response.json();
+                    const rate = data?.rates?.CNY;
+                    if (!Number.isFinite(rate) || rate <= 0) throw new Error('Invalid rate');
+                    this.exchangeRate = rate;
+                    this.rateSource = 'api';
+                    this.lastExchangeRateUpdate = now;
+                } catch {
+                    // Keep a valid reference rate when the endpoint is unavailable.
                 }
+                this.updateRateNote();
+                if (this.isRunning) this.update();
+            }
+
+            updateRateNote() {
+                const text = this.translations[this.currentLang];
+                const source = this.rateSource === 'api' ? text.referenceRate : text.fallbackRate;
+                document.getElementById('rateNote').textContent = `${source}: 1 USD ≈ ${this.exchangeRate.toFixed(4)} CNY · ${text.estimate}`;
             }
 
             updateCurrencySuffix() {
@@ -601,7 +658,10 @@
             }
 
             validateInputs() {
-                const isValid = this.salaryAmountInput.value > 0 && this.workHoursInput.value > 0;
+                const amount = Number(this.salaryAmountInput.value);
+                const hours = Number(this.workHoursInput.value);
+                const isValid = Number.isFinite(amount) && amount > 0
+                    && Number.isFinite(hours) && hours > 0 && hours <= 24;
                 this.startBtn.disabled = !isValid;
             }
 
@@ -614,14 +674,15 @@
             }
 
             startTimer() {
-                if (!this.salaryAmountInput.value || !this.workHoursInput.value) return;
+                this.validateInputs();
+                if (this.startBtn.disabled) return;
 
                 this.salaryAmount = parseFloat(this.salaryAmountInput.value);
                 this.workHours = parseFloat(this.workHoursInput.value);
                 this.startTime = Date.now();
                 this.isRunning = true;
                 this.isPaused = false;
-                this.startBtn.textContent = '停止计时';
+                this.startBtn.textContent = this.translations[this.currentLang].stop;
                 this.salaryAmountInput.disabled = true;
                 this.workHoursInput.disabled = true;
                 this.salaryTypeSelect.disabled = true;
@@ -629,16 +690,20 @@
                 this.centerBtnBox.style.display = 'none';
                 this.salaryDisplay.style.display = 'none';
                 this.salaryFullDialog.style.display = 'flex';
+                this.lastCoinTime = 0;
+                this.pausedAt = null;
+                this.update();
+                this.salaryFullDialog.focus();
 
                 this.interval = setInterval(() => this.update(), 50);
-                this.fullDialogPause.textContent = '暂停';
+                this.fullDialogPause.textContent = this.translations[this.currentLang].pause;
             }
 
             stopTimer() {
                 clearInterval(this.interval);
                 this.isRunning = false;
                 this.isPaused = false;
-                this.startBtn.textContent = '开始计时';
+                this.startBtn.textContent = this.translations[this.currentLang].start;
                 this.salaryAmountInput.disabled = false;
                 this.workHoursInput.disabled = false;
                 this.salaryTypeSelect.disabled = false;
@@ -646,6 +711,7 @@
                 this.centerBtnBox.style.display = 'flex';
                 this.salaryDisplay.style.display = 'none';
                 this.salaryFullDialog.style.display = 'none';
+                this.startBtn.focus();
             }
 
             calculateHourlyRate() {
@@ -663,7 +729,7 @@
             }
 
             update() {
-                const elapsedMs = Date.now() - this.startTime;
+                const elapsedMs = Math.max(0, (this.isPaused ? this.pausedAt : Date.now()) - this.startTime);
                 const elapsedHours = elapsedMs / (1000 * 60 * 60);
                 const workHoursPerDay = this.workHours; // 每天工作时长
                 let perDay;
@@ -682,9 +748,8 @@
                 // 每秒收入 = 每小时收入 / 3600
                 const perSecondCNY = perHourCNY / 3600;
                 const perSecondUSD = perHourUSD / 3600;
-                const salary = perHourCNY * (elapsedMs / (1000 * 60 * 60));
-                const salaryCNY = this.currency === 'CNY' ? salary : this.convertCurrency(salary, 'USD', 'CNY');
-                const salaryUSD = this.currency === 'USD' ? salary : this.convertCurrency(salary, 'CNY', 'USD');
+                const salaryCNY = perHourCNY * elapsedHours;
+                const salaryUSD = perHourUSD * elapsedHours;
                 const primaryCurrency = this.currency === 'CNY' ? 'CNY' : 'USD';
                 const secondaryCurrency = this.currency === 'CNY' ? 'USD' : 'CNY';
                 const primaryAmount = this.currency === 'CNY' ? salaryCNY : salaryUSD;
@@ -733,15 +798,20 @@
             }
 
             pauseTimer() {
+                this.update();
+                this.pausedAt = Date.now();
                 clearInterval(this.interval);
                 this.isPaused = true;
-                this.fullDialogPause.textContent = '继续';
+                this.fullDialogPause.textContent = this.translations[this.currentLang].resume;
             }
 
             resumeTimer() {
                 if (!this.isPaused) return;
+                this.startTime += Date.now() - this.pausedAt;
+                this.pausedAt = null;
                 this.isPaused = false;
-                this.fullDialogPause.textContent = '暂停';
+                this.fullDialogPause.textContent = this.translations[this.currentLang].pause;
+                this.update();
                 this.interval = setInterval(() => this.update(), 50);
             }
 
@@ -750,7 +820,15 @@
                 this.languageBtns.forEach(btn => {
                     btn.classList.toggle('active', btn.dataset.lang === lang);
                 });
+                document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
                 document.querySelector('h1').textContent = this.translations[lang].title;
+                document.getElementById('intro').textContent = this.translations[lang].intro;
+                document.getElementById('pageNote').firstChild.textContent = this.translations[lang].privacy;
+                this.salaryAmountInput.setAttribute('aria-label', this.translations[lang].salary);
+                this.workHoursInput.setAttribute('aria-label', this.translations[lang].workHours);
+                this.salaryTypeSelect.setAttribute('aria-label', this.translations[lang].period);
+                this.currencySuffix.setAttribute('aria-label', this.translations[lang].currency);
+                this.updateRateNote();
                 this.salaryAmountInput.placeholder = this.translations[lang].salary;
                 this.workHoursInput.placeholder = this.translations[lang].workHours;
                 this.salaryTypeSelect.options[0].text = this.translations[lang].biweekly;
@@ -760,10 +838,10 @@
                 this.fullDialogPause.textContent = this.isPaused ? this.translations[lang].resume : this.translations[lang].pause;
                 this.fullDialogCancel.textContent = this.translations[lang].cancel;
                 document.querySelector('.dialog-earned-title').textContent = this.translations[lang].earned;
-                document.querySelector('.dialog-row:nth-child(3) .label').textContent = this.translations[lang].workTime;
-                document.querySelector('.dialog-row:nth-child(4) .label').textContent = this.translations[lang].perSecond;
-                document.querySelector('.dialog-row:nth-child(5) .label').textContent = this.translations[lang].perHour;
-                document.querySelector('.dialog-row:nth-child(6) .label').textContent = this.translations[lang].perDay;
+                document.querySelectorAll('.dialog-row .label')[0].textContent = this.translations[lang].workTime;
+                document.querySelectorAll('.dialog-row .label')[1].textContent = this.translations[lang].perSecond;
+                document.querySelectorAll('.dialog-row .label')[2].textContent = this.translations[lang].perHour;
+                document.querySelectorAll('.dialog-row .label')[3].textContent = this.translations[lang].perDay;
             }
         }
         const calculator = new SalaryCalculator();

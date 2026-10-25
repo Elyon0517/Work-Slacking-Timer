@@ -1,0 +1,11 @@
+{
+  "name": "work-slacking-timer",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "dev": "python3 -m http.server 5191 --bind 127.0.0.1",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": { "@playwright/test": "1.64.1" }
+}
